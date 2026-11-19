@@ -1,1 +1,7 @@
-
+{
+"permissions": {
+"allow": [
+"Bash(python3 -I /mnt/project-files/chance_20261116/line/send_due.py)"
+]
+}
+}
