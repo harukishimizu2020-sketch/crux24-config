@@ -1,0 +1,26 @@
+# Crux-24 LINE 通知。AI を通さず、決まった時刻に GitHub が送る。
+# 鍵はリポジトリのシークレット LINE_CHANNEL_ACCESS_TOKEN(ユーザーが登録)。
+name: Crux-24 LINE send
+on:
+  schedule:
+    - cron: '20 10 * * *'   # 19:20 JST(翌日分 early)
+    - cron: '20 15 * * *'   # 0:20 JST(当日分 late、無ければ未送信の early)
+  workflow_dispatch: {}
+permissions:
+  contents: write
+concurrency: { group: line-send, cancel-in-progress: false }
+jobs:
+  send:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 -I line/send_due_gha.py
+        env:
+          LINE_CHANNEL_ACCESS_TOKEN: ${{ secrets.LINE_CHANNEL_ACCESS_TOKEN }}
+      - name: 送信記録を残す
+        run: |
+          git config user.name crux24-bot
+          git config user.email crux24-bot@users.noreply.github.com
+          git add line/sent.jsonl
+          git diff --cached --quiet || (git commit -m "LINE sent log" && git push)
